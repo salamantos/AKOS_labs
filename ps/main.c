@@ -21,13 +21,14 @@ void printInfoFromFile(char *fileName) {
         fscanf(f, "%d", &pid);
         fscanf(f, "%s", tcomm);
         fscanf(f, "%s", string);
-        for (int i = 0; i < 3; ++i) {
+        int i;
+        for (i = 0; i < 3; ++i) {
             fscanf(f, "%d", &number);
         }
 
         fscanf(f, "%d", &tty_nr);
         fscanf(f, "%d", &tty_pgrp);
-        for (int i = 0; i < 5; ++i) {
+        for (i = 0; i < 5; ++i) {
             fscanf(f, "%d", &number);
         }
         fscanf(f, "%d", &utime);
@@ -39,7 +40,8 @@ void printInfoFromFile(char *fileName) {
         // Удаляем () из строки
         size_t lenStr = strlen(tcomm);
         char procName[100];
-        for (size_t j = 1; j < lenStr - 1; ++j) {
+        size_t j;
+        for (j = 1; j < lenStr - 1; ++j) {
             procName[j - 1] = tcomm[j];
         }
         //printf("%s, %s\n", tcomm, procName);
@@ -59,7 +61,8 @@ int main() {
 //            *nameD = *ent->d_name;
             size_t lenStr = strlen(ent->d_name);
             int isNumber = 1;
-            for (size_t i = 0; i < lenStr; ++i) {
+            size_t i;
+            for (i = 0; i < lenStr; ++i) {
                 if (!isdigit(ent->d_name[i])) {
                     isNumber=0;
                     break;
