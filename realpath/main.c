@@ -5,34 +5,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
+
+// Печатает путь по названию файла / путю к нему
+void printPath(char *arg) {
+    if (arg[0] == '/') {
+        printf("%s\n", arg);
+    } else {
+        char prePath[PATH_MAX]; // Путь от корня до данной директории
+        char *res = getcwd(prePath, PATH_MAX);
+        if (res != NULL) {
+            printf("%s/%s\n", prePath, arg);
+        } else {
+            err(1, "Error number %d", errno);
+        }
+    }
+}
 
 int main(int argc, char *argv[]) {
-    char buff[PATH_MAX];
-    char *p;
-
-    if (argc == 2) {
-        if ((p = realpath(argv[1], buff)) == NULL) {
-            if (errno == 2) {
-                //No such file or directory
-                if (argv[1][0] == '/') {
-                    printf("%s\n", argv[1]);
-                } else {
-                    char buff1[PATH_MAX];
-                    char *res = getcwd(buff1, PATH_MAX);
-                    if (res != NULL) {
-                        printf("%s%s%s\n", buff1, "/", argv[1]);
-                    }
-                }
-            } else {
-                err(1, "%s", buff);
-            }
-        } else {
-            printf("%s\n", p);
-        }
-    } else {
+    if (argc != 2) {
         fprintf(stderr, "realpath: omitted operand\n");
-        exit(1);
+        return 1;
     }
-    exit(0);
+
+    // Проверка, не является ли файл ссылкой
+    struct stat sb;
+    if (lstat(argv[1], &sb) == -1) {
+        // No such file or directory
+        if (errno != 2) {
+            perror("stat err");
+            exit(EXIT_FAILURE);
+        }
+    }
+    // Если symlink
+    if ((sb.st_mode & S_IFMT) == S_IFLNK) {
+        char *linkName;
+        linkName = malloc(PATH_MAX);
+        readlink(argv[1], linkName, PATH_MAX); // linkName - куда указывает ссылка
+        linkName[sb.st_size] = '\0'; // Символ конца строки
+        printPath(linkName);
+    } else {
+        printPath(argv[1]);
+    }
+
+    return 0;
 }
 
