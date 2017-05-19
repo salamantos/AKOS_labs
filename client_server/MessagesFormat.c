@@ -12,10 +12,7 @@ unsigned char* intToBytes(unsigned long number) {
     bytes[1] = (unsigned char) ((number & 0x00FF0000) >> 16);
     bytes[0] = (unsigned char) ((number & 0xFF000000) >> 24);
     bytes[4] = 0; // Symbol of string end
-//    unsigned int i;
-//    for (i = 0; i < 4; ++i) {
-//        printf("1 %x\n", bytes[i]);
-//    }
+
     return bytes;
 }
 

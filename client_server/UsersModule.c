@@ -28,7 +28,7 @@ int isUserExist( char* login ) {
                 return 1;
             }
         }
-        return 0;
+        return 0; // Doesn't exist
     } else {
         return 6;
     }
@@ -58,7 +58,7 @@ int authentication( char* login, char* password ) {
         char getPassword[100];
         int getIsKicked;
         readUserData( login, getPassword, &getIsKicked );
-        if (!strcmp( getPassword, hash( password ))) {
+        if (!strcmp( getPassword, password )) {
             return 0;
         } else {
             return 2;
