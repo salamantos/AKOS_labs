@@ -4,22 +4,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include "Common.h"
 
-unsigned char* intToBytes(unsigned long number) {
-    unsigned char* bytes = (unsigned char*) malloc(5);
+unsigned char* intToBytes( unsigned long number ) {
+    unsigned char* bytes = (unsigned char*) malloc( 5 );
     bytes[3] = (unsigned char) (number & 0x000000FF);
     bytes[2] = (unsigned char) ((number & 0x0000FF00) >> 8);
     bytes[1] = (unsigned char) ((number & 0x00FF0000) >> 16);
     bytes[0] = (unsigned char) ((number & 0xFF000000) >> 24);
     bytes[4] = 0; // Symbol of string end
-//    unsigned int i;
-//    for (i = 0; i < 4; ++i) {
-//        printf("1 %x\n", bytes[i]);
-//    }
+
     return bytes;
 }
 
-size_t bytesToInt(unsigned char* bytes) {
+size_t bytesToInt( unsigned char* bytes ) {
     size_t number = 0;
     number = bytes[0] << 24;
     number += (bytes[1] << 16);
@@ -29,7 +27,7 @@ size_t bytesToInt(unsigned char* bytes) {
     return number;
 }
 
-void bytesToDoubleInt(unsigned char* bytes, int* number1, int* number2) {
+void bytesToDoubleInt( unsigned char* bytes, int* number1, int* number2 ) {
     *number1 = 0;
     *number1 = bytes[0] << 24;
     *number1 += (bytes[1] << 16);
@@ -45,14 +43,14 @@ void bytesToDoubleInt(unsigned char* bytes, int* number1, int* number2) {
 
 unsigned char* getTimeStamp() {
     struct timeval tv;
-    gettimeofday(&tv, NULL);
-    printf("%d, %d\n", (int) tv.tv_sec, (int) (unsigned long) tv.tv_usec);
+    gettimeofday( &tv, NULL);
+    printf( "%d, %d\n", (int) tv.tv_sec, (int) (unsigned long) tv.tv_usec );
 
-    unsigned char* result = (unsigned char*) malloc(9);
+    unsigned char* result = (unsigned char*) malloc( 9 );
     int i = 0;
     int k;
-    unsigned char* timeInSec = intToBytes((unsigned long) tv.tv_sec);
-    unsigned char* timeInMicroSec = intToBytes((unsigned long) tv.tv_usec);
+    unsigned char* timeInSec = intToBytes((unsigned long) tv.tv_sec );
+    unsigned char* timeInMicroSec = intToBytes((unsigned long) tv.tv_usec );
     for (k = 0; k < 4; ++k) {
         result[i++] = timeInSec[k];
     }
@@ -64,8 +62,8 @@ unsigned char* getTimeStamp() {
 }
 
 size_t
-formMessage(unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen) {
-    unsigned char* lenInBytes = intToBytes(messageBodyLen);
+formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
+    unsigned char* lenInBytes = intToBytes( messageBodyLen );
     int i = 0;
     resultMessage[i++] = type;
     int k;
@@ -76,24 +74,41 @@ formMessage(unsigned char* resultMessage, unsigned char type, unsigned char* mes
     for (k = 0; k < messageBodyLen; ++k) {
         resultMessage[i++] = messageBody[k];
     }
-    free(lenInBytes);
+    free( lenInBytes );
     return (size_t) i;
 }
 
-void recognizeMessage(char* message, size_t* len, char* type, char* messageBody) {
+void recognizeMessage( char* message, size_t* len, char* type, char* messageBody ) {
     unsigned int i = 0;
     *type = message[i++];
-    unsigned char* lenInBytes = (unsigned char*) malloc(5);
+    unsigned char* lenInBytes = (unsigned char*) malloc( 5 );
     size_t j;
     for (j = 0; j < 4; ++j) {
         lenInBytes[j] = (unsigned char) message[i++];
     }
-    size_t messageBodyLen = bytesToInt(lenInBytes);
+    size_t messageBodyLen = bytesToInt( lenInBytes );
     for (j = 0; j < messageBodyLen; ++j) {
         messageBody[j] = (unsigned char) message[i++];
     }
     messageBody[messageBodyLen] = 0;
     *len = messageBodyLen;
 
-    free(lenInBytes);
+    free( lenInBytes );
+}
+
+void prepareUsersList( char* messageBody, size_t* messBSize, int* onlineCount, struct CUser* usersList ) {
+    bzero( messageBody, MESSAGE_LEN );
+    strcpy( messageBody, "Пользователи онлайн:\n" );
+    size_t shift = strlen( "Пользователи онлайн:\n" );
+    int i = 0; // Количество учтенных пользователей
+    int j = 0; // Индекс массива
+    while (i < *onlineCount) {
+        if (usersList[j].id != 0 && usersList[j].isOnline == 1) {
+            int charactersWritten = sprintf( messageBody + shift, "(%d) %s\n", usersList[j].id, usersList[j].login );
+            shift += charactersWritten;
+            ++i;
+        }
+        ++j;
+    }
+    *messBSize = shift;
 }

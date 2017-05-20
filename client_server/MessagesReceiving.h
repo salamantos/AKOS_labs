@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#pragma once
 
 int writeToHistory( char* message, size_t len );
 

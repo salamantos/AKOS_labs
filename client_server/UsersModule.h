@@ -6,15 +6,16 @@
 #pragma once
 
 #include <stdio.h>
+#include "Common.h"
 
 char* hash( char* str );
 
 int isCorrect( char* login, char* password );
 
-int isUserExist( char* login );
+int isUserExist( struct CUser* usersList, char* login );
 
-int createUser( char* login, char* password, int isKicked );
+int createUser( struct CUser* usersList, char* login, char* password, int isKicked, int sockfd );
 
-int authentication( char* login, char* password );
+int authentication( struct CUser* usersList, char* login, char* password, int sockfd );
 
-int kick( char* login );
+int kick( struct CUser* usersList, int id, int* kickedSock, int* isOnline );
