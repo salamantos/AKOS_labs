@@ -2,6 +2,7 @@
 #include <string.h>
 #include <regex.h>
 #include <dirent.h>
+#include "Common.h"
 
 /*
 Информация о пользователе хранится в отдельном файле
@@ -16,49 +17,73 @@ char* hash( char* str ) {
 }
 
 int isCorrect( char* login, char* password ) {
+    if (strcmp( login, "root" ) == 0 && strcmp( password, ROOT_PASSWORD ) != 0) {
+        return 5;
+    }
+    if (strlen( login ) > 32 || strlen( password ) > 32 || strlen( password ) == 0) {
+        return 4;
+    }
+    for (int i = 0; i < strlen( login ); ++i) {
+        if (!((login[i] <= 'z' && login[i] >= 'A') || (login[i] <= '9' && login[i] >= '0'))) {
+            return 4;
+        }
+    }
+    for (int i = 0; i < strlen( password ); ++i) {
+        if (!((password[i] <= 'z' && password[i] >= 'A') || (password[i] <= '9' && password[i] >= '0'))) {
+            return 4;
+        }
+    }
+    return 0;
+}
+
+int isUserExist( struct CUser* usersList, char* login ) {
+    for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+        if (usersList[i].id != 0) {
+            if (strcmp( usersList[i].login, login ) == 0) {
+                return 1; // Есть пользователь
+            }
+        }
+    }
+    // Нет такого пользователя
+    return 0;
+}
+
+int readUserData( struct CUser* usersList, char* login, char* getPassword, int* getIsKicked ) {
+    for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+        if (strcmp( usersList[i].login, login ) == 0) {
+            strcpy( getPassword, usersList[i].password );
+            *getIsKicked = usersList[i].isKicked;
+            return 0; // Есть пользователь
+        }
+    }
     return 1;
 }
 
-int isUserExist( char* login ) {
-    DIR* dir = opendir( "users" );
-    if (dir) {
-        struct dirent* ent;
-        while ((ent = readdir( dir )) != NULL) {
-            if (!strcmp( ent->d_name, login )) {
-                return 1;
-            }
-        }
-        return 0; // Doesn't exist
-    } else {
-        return 6;
-    }
-}
-
-int readUserData( char* login, char* getPassword, int* getIsKicked ) {
-    char filePath[100];
-    sprintf( filePath, "users/%s", login );
-    FILE* f = fopen( filePath, "r" );
-    if (f == NULL) {
-        // файл не удалось открыть
-        return 1;
-    }
-    char buff[100];
-    fscanf( f, "%s%s%d", buff, getPassword, getIsKicked );
-    fclose( f );
-    return 0;
-}
-
-int authentication( char* login, char* password ) {
+int authentication( struct CUser* usersList, char* login, char* password, int sockfd ) {
     // == 1 - пользователь не существует
     // == 2 - неверный пароль
     // == 0 - аутентификация пройдена
+    // == 5 - kicked
     // == 6 - unknown error
-    int res = isUserExist( login );
+    int res = isUserExist( usersList, login );
     if (res == 1) {
         char getPassword[100];
         int getIsKicked;
-        readUserData( login, getPassword, &getIsKicked );
+        readUserData( usersList, login, getPassword, &getIsKicked );
         if (!strcmp( getPassword, password )) {
+            // Делаем активным
+            for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+                if (usersList[i].id != 0) {
+                    if (strcmp( usersList[i].login, login ) == 0) {
+                        if (usersList[i].isKicked == 1) {
+                            return 5;
+                        }
+                        usersList[i].isOnline = 1;
+                        usersList[i].sockfd = sockfd;
+                        return 0;
+                    }
+                }
+            }
             return 0;
         } else {
             return 2;
@@ -72,48 +97,48 @@ int authentication( char* login, char* password ) {
     }
 }
 
-int createUser( char* login, char* password, int isKicked ) {
-    // Предполагается, что пользователя не существует
+int createUser( struct CUser* usersList, char* login, char* password, int isKicked, int sockfd ) {
+    if (isUserExist( usersList, login ) == 1) {
+        // Изменяем сокет
+        for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+            if (strcmp( usersList[i].login, login ) == 0) {
+                usersList[i].sockfd = sockfd;
+                return 0;
+            }
+        }
+    }
 
     // Проверяем логин и пароль на коректность
-    if (!isCorrect( login, password )) {
-        return 1;
+    int status = isCorrect( login, password );
+    if (status != 0) {
+        return status;
     }
 
-    // Создаём файл
-    char filePath[100];
-    sprintf( filePath, "users/%s", login );
-    FILE* f = fopen( filePath, "w" );
-    if (f == NULL) {
-        // файл не удалось открыть
-        return 2;
-    }
-    fprintf( f, "%s\n%s\n%d\n", login, hash( password ), isKicked );
-    fclose( f );
+    struct CUser userInfo;
+    userInfo.login = login;
+    userInfo.password = password;
+    userInfo.id = userIdRandom++;
+    userInfo.isOnline = 1;
+    userInfo.isKicked = isKicked;
+    userInfo.sockfd = sockfd;
+    addUserToList( usersList, &userInfo );
+
     return 0;
 }
 
-int kick( char* login ) {
+int kick( struct CUser* usersList, int id, int* kickedSock, int* isOnline ) {
     // == 1 - пользователь не существует
     // == 0 - успешно
-    // == 2 - уже кикнут
     // == 6 - unknown error
-    int res = isUserExist( login );
-    if (res == 1) {
-        char getPassword[100];
-        int getIsKicked;
-        readUserData( login, getPassword, &getIsKicked );
-        if (getIsKicked == 1) {
-            return 2;
-        } else {
-            createUser(login, getPassword, 1);
+    // Кикаем
+    for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+        if (usersList[i].id == id) {
+            usersList[i].isKicked = 1;
+            *isOnline = usersList[i].isOnline;
+            usersList[i].isOnline = 0;
+            *kickedSock = usersList[i].sockfd;
             return 0;
         }
-    } else {
-        if (res == 0) {
-            return 1;
-        } else {
-            return res;
-        }
     }
+    return 1;
 }

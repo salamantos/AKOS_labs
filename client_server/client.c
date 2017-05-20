@@ -29,7 +29,6 @@ void* receiver( void* type ) {
     char buffer[MESSAGE_LEN];
     while (*(char*) type != 'o') {
         bzero( buffer, MESSAGE_LEN );
-        printf( "qwertyuiop!\n" );
         ssize_t n = read( sockfd, buffer, MESSAGE_LEN );
         if (n < 0)
             error( "ERROR reading from socket" );
@@ -44,10 +43,22 @@ void* receiver( void* type ) {
                 printf( "Вы были удалены из чата, причина: %s\n", messageBody );
                 exit( 0 );
             case 'r':
+                printf( "   %s\n", messageBody );
+                break;
+            case 'l':
                 printf( "%s\n", messageBody );
                 break;
+            case 'm':
+                printf( "%s\n", messageBody );
+                break;
+            case 's':
+                printf( "Статусное сообщение №%s\n", messageBody );
+                break;
+            case 0:
+                terminate( 146 );
+                break;
             default:
-                    printf( "Server is crazy! ->%c<-\n", typeGet );
+                printf( "Неизвестная команда: %c\n", typeGet );
         }
     }
     printf( "goodbye!\n" );
@@ -85,8 +96,6 @@ int main( int argc, char* argv[] ) {
         error( "ERROR connecting" );
 
     ssize_t n;
-
-    printf( "hello\n" );
 
     // Логинимся
     char type = 'i'; // login
@@ -129,6 +138,9 @@ int main( int argc, char* argv[] ) {
                 exit( 0 );
             case '4':
                 printf( "Ошибка регистрации ->%c<-\n", type );
+                exit( 0 );
+            case '5':
+                printf( "Ошибка доступа ->%c<-\n", type );
                 exit( 0 );
             default:
                 printf( "Server is crazy! ->%c<-\n", type );

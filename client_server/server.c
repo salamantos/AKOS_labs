@@ -21,7 +21,7 @@ void error( const char* msg ) {
     exit( 1 );
 }
 
-int sockfd, newsockfd;
+int sockfd;
 sem_t semaphore;
 
 void terminate( int param ) {
@@ -32,13 +32,36 @@ void terminate( int param ) {
     exit( 0 );
 }
 
-int main() {
-    // Проверяем, что все нужные директории и файлы существуют
-    DIR* dir = opendir( "users" );
-    if (!dir) {
-        fprintf( stderr, "Error opening directory\n" );
-        return 1;
+void* openBroadcast( void* getParam ) {
+    struct CThreadParam* param = (struct CThreadParam*) getParam;
+    int newsockfd = param->newsockfd;
+    struct CMessage* messBuffer = param->messBuffer;
+    int* lastMessId = param->lastMessId;
+    int* onlineCount = param->onlineCount;
+    struct CUser* usersList = param->usersList;
+    sem_t* semaphore = param->semaphore;
+    //free( param );
+    int currentId = *lastMessId;
+    while (1) {
+        if (currentId == *lastMessId) {
+            continue;
+        }
+        char message[MESSAGE_LEN];
+        size_t messSize = formMessage( message, 'r', messBuffer[currentId].mess, messBuffer[currentId].len );
+        sendToAll( message, messSize, *onlineCount, usersList );
+        ++currentId;
     }
+}
+
+int main() {
+    // Инициализируем переменные
+    userIdRandom = 1000;
+    nullUser = (struct CUser*) malloc( sizeof( struct CUser ));
+    nullUser->id = 0;
+    nullUser->isKicked = 0;
+    nullUser->isOnline = 0;
+    nullUser->login = 0;
+    nullUser->password = 0;
 
     // Обработка сигнала ctrl+C
     struct sigaction sigIntHandler;
@@ -49,7 +72,9 @@ int main() {
 
     // Выделяем общую память под буффер сообщений
     struct CMessage* messBuffer = (struct CMessage*) malloc( 50 * sizeof( struct CMessage ));
-    int* lastMessId = 0; // Номер последнего пришедшего сообщения, нужен, чтобы потоки могли знать, есть ли сообщения для отправки
+    int* lastMessId = (int*) malloc(
+            sizeof( int )); // Номер последнего пришедшего сообщения, нужен, чтобы потоки могли знать, есть ли сообщения для отправки
+    *lastMessId = 0;
 
     // Инициализация семафора
     sem_init( &semaphore, 0, 1 );
@@ -66,25 +91,41 @@ int main() {
     serv_addr.sin_port = htons( portno );
     if (bind( sockfd, (struct sockaddr*) &serv_addr, sizeof( serv_addr )) < 0)
         error( "ERROR on binding" );
-    listen( sockfd, 100 );
+    listen( sockfd, MAX_CONNECTED_USERS );
     clilen = sizeof( cli_addr );
     printf( "Started listening\n" );
 
-    int socketList[100];
-    int online = 0;
+    struct CUser* usersList = (struct CUser*) malloc( MAX_CONNECTED_USERS * sizeof( struct CUser ));
+    for (int i = 0; i < MAX_CONNECTED_USERS; ++i) {
+        usersList[i] = *nullUser;
+    }
+    int* onlineCount = (int*) malloc( sizeof( int ));
+    *onlineCount = 0;
+
+    pthread_t thread1;
+    struct CThreadParam* param = (struct CThreadParam*) malloc( sizeof( struct CThreadParam ));
+    param->newsockfd = sockfd;
+    param->messBuffer = messBuffer;
+    param->lastMessId = lastMessId;
+    param->onlineCount = onlineCount;
+    param->usersList = usersList;
+    param->semaphore = &semaphore;
+    pthread_create( &thread1, NULL, openBroadcast, (void*) param );
 
     while (1) {
-        printf("lalala\n");
-        newsockfd = accept( sockfd, (struct sockaddr*) &cli_addr, &clilen );
+        printf( "while 1\n" );
+        int newsockfd = accept( sockfd, (struct sockaddr*) &cli_addr, &clilen );
         if (newsockfd < 0)
             continue;
 
-        struct CThreadParam param;
-        param.newsockfd = &newsockfd;
-        param.messBuffer = messBuffer;
-        param.lastMessId = lastMessId;
-        param.semaphore = &semaphore;
+        param->newsockfd = newsockfd;
+        param->messBuffer = messBuffer;
+        param->lastMessId = lastMessId;
+        param->onlineCount = onlineCount;
+        param->usersList = usersList;
+        param->semaphore = &semaphore;
         pthread_t thread;
-        pthread_create( &thread, NULL, newThread, (void*) &param );
+        printf( "while created thread\n" );
+        pthread_create( &thread, NULL, newThread, (void*) param );
     }
 }
