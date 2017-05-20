@@ -9,8 +9,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define portno 1338
-#define MESSAGE_LEN 1000
+#define portno 1332
+#define MESSAGE_LEN 66000
 #define ROOT_PASSWORD "pass"
 #define MAX_CONNECTED_USERS 100
 
@@ -40,6 +40,12 @@ struct CThreadParam {
 };
 
 struct CUser* nullUser;
+
+void error( const char* msg );
+
+int max( int a, int b );
+
+int min( int a, int b );
 
 void error( const char* msg );
 

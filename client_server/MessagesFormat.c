@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include "Common.h"
 
+// Формирует из числа 4-х байтовое представление
 unsigned char* intToBytes( unsigned long number ) {
     unsigned char* bytes = (unsigned char*) malloc( 5 );
     bytes[3] = (unsigned char) (number & 0x000000FF);
@@ -17,6 +18,7 @@ unsigned char* intToBytes( unsigned long number ) {
     return bytes;
 }
 
+// Обратна intToBytes
 size_t bytesToInt( unsigned char* bytes ) {
     size_t number = 0;
     number = bytes[0] << 24;
@@ -27,6 +29,7 @@ size_t bytesToInt( unsigned char* bytes ) {
     return number;
 }
 
+// Для getTimeStamp
 void bytesToDoubleInt( unsigned char* bytes, int* number1, int* number2 ) {
     *number1 = 0;
     *number1 = bytes[0] << 24;
@@ -61,8 +64,8 @@ unsigned char* getTimeStamp() {
     return result;
 }
 
-size_t
-formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
+// Формирование сообщения
+size_t formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
     unsigned char* lenInBytes = intToBytes( messageBodyLen );
     int i = 0;
     resultMessage[i++] = type;
@@ -78,6 +81,7 @@ formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* me
     return (size_t) i;
 }
 
+// Обратная для formMessage
 void recognizeMessage( char* message, size_t* len, char* type, char* messageBody ) {
     unsigned int i = 0;
     *type = message[i++];
@@ -96,10 +100,11 @@ void recognizeMessage( char* message, size_t* len, char* type, char* messageBody
     free( lenInBytes );
 }
 
+// Формирование списка онлайн юзеров
 void prepareUsersList( char* messageBody, size_t* messBSize, int* onlineCount, struct CUser* usersList ) {
     bzero( messageBody, MESSAGE_LEN );
     strcpy( messageBody, "Пользователи онлайн:\n" );
-    size_t shift = strlen( "Пользователи онлайн:\n" );
+    size_t shift = strlen( "Пользователи онлайн:\n" ); // Сдвиг относительно начала строки
     int i = 0; // Количество учтенных пользователей
     int j = 0; // Индекс массива
     while (i < *onlineCount) {
