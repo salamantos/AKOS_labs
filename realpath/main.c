@@ -93,8 +93,6 @@ int main( int argc, char* argv[] ) {
     char buffer[PATH_MAX];
     rmSlashes( buffer, argv[1] );
 
-    printf( "%s\n", buffer );
-
     // Проверка, не является ли файл ссылкой
     struct stat sb;
     if (lstat( buffer, &sb ) == -1) {
@@ -108,7 +106,7 @@ int main( int argc, char* argv[] ) {
     if ((sb.st_mode & S_IFMT) == S_IFLNK) {
         char* linkName;
         linkName = (char*) malloc( PATH_MAX );
-        readlink( argv[1], linkName, PATH_MAX ); // linkName - куда указывает ссылка
+        readlink( buffer, linkName, PATH_MAX ); // linkName - куда указывает ссылка
         linkName[sb.st_size] = '\0'; // Символ конца строки
         printPath( linkName );
     } else {
