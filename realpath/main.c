@@ -6,48 +6,86 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <string.h>
 
-// Печатает путь по названию файла / путю к нему
-void printPath(char *arg) {
+// Печатает путь по названию файла / по путю к нему
+void printPath( char* arg ) {
+    // Проверяем переходы вида ..
+    char buffer[PATH_MAX];
+    char buffer2[PATH_MAX];
+    size_t i = 0, j = 0;
+    char dot1 = 0, dot2 = 0; // Две точки
+    i = strlen( arg ) - 1;
+    int haveSlashBefore = 1;
+    if (arg[strlen( arg ) - 1] == '.' && arg[strlen( arg ) - 2] == '.') {
+        haveSlashBefore = 0;
+    }
+    while (i > 0) {
+        dot1 = arg[i - 1];
+        dot2 = arg[i];
+        if (dot1 == '.' && dot2 == '.') {
+            if (i < 3) {
+                buffer[--j] = 0;
+                break;
+            }
+            i -= 3;
+            while (arg[i] != '/' && i > 0) {
+                --i;
+            }
+            if (haveSlashBefore == 1) {
+                --j;
+            }
+            if (i >= 0) buffer[j++] = arg[i];
+        } else {
+            buffer[j++] = arg[i];
+            --i;
+        }
+        haveSlashBefore = 1;
+    }
+    int k = 0;
+    int r = 0;
+    for (k = j - 1; k >= 0; --k) {
+        buffer2[r++] = buffer[k];
+    }
+
     if (arg[0] == '/') {
-        printf("%s\n", arg);
+        printf( "%s\n", buffer2 );
     } else {
         char prePath[PATH_MAX]; // Путь от корня до данной директории
-        char *res = getcwd(prePath, PATH_MAX);
+        char* res = getcwd( prePath, PATH_MAX );
         if (res != NULL) {
-            printf("%s/%s\n", prePath, arg);
+            printf( "%s/%s\n", prePath, buffer2 );
         } else {
-            err(1, "Error number %d", errno);
+            err( 1, "Error number %d", errno);
         }
     }
 }
 
-int main(int argc, char *argv[]) {
+int main( int argc, char* argv[] ) {
     if (argc != 2) {
-        fprintf(stderr, "realpath: omitted operand\n");
+        fprintf( stderr, "realpath: omitted operand\n" );
         return 1;
     }
 
     // Проверка, не является ли файл ссылкой
     struct stat sb;
-    if (lstat(argv[1], &sb) == -1) {
+    if (lstat( argv[1], &sb ) == -1) {
         // No such file or directory
         if (errno != 2) {
-            perror("stat err");
-            exit(EXIT_FAILURE);
+            perror( "stat err" );
+            exit( EXIT_FAILURE );
         }
     }
     // Если symlink
     if ((sb.st_mode & S_IFMT) == S_IFLNK) {
-        char *linkName;
-        linkName = malloc(PATH_MAX);
-        readlink(argv[1], linkName, PATH_MAX); // linkName - куда указывает ссылка
+        char* linkName;
+        linkName = malloc( PATH_MAX );
+        readlink( argv[1], linkName, PATH_MAX ); // linkName - куда указывает ссылка
         linkName[sb.st_size] = '\0'; // Символ конца строки
-        printPath(linkName);
+        printPath( linkName );
     } else {
-        printPath(argv[1]);
+        printPath( argv[1] );
     }
 
     return 0;
 }
-
