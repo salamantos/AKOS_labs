@@ -79,7 +79,7 @@ int main( int argc, char* argv[] ) {
     // Если symlink
     if ((sb.st_mode & S_IFMT) == S_IFLNK) {
         char* linkName;
-        linkName = malloc( PATH_MAX );
+        linkName = (char*) malloc( PATH_MAX );
         readlink( argv[1], linkName, PATH_MAX ); // linkName - куда указывает ссылка
         linkName[sb.st_size] = '\0'; // Символ конца строки
         printPath( linkName );
