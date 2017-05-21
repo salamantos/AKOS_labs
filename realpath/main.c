@@ -8,6 +8,22 @@
 #include <sys/stat.h>
 #include <string.h>
 
+void rmSlashes( char* dest, char* src ) {
+    // Обработка "/////////"
+    char slash = src[0];
+    int j = 0;
+    dest[j++] = src[0];
+    for (int i = 1; i < strlen( src ); ++i) {
+        if (src[i] == slash && slash == '/') {
+
+        } else {
+            dest[j++] = src[i];
+        }
+        slash = src[i];
+    }
+    dest[j] = 0;
+}
+
 // Печатает путь по названию файла / по путю к нему
 void printPath( char* arg ) {
     // Проверяем переходы вида ..
@@ -49,12 +65,18 @@ void printPath( char* arg ) {
     }
 
     if (arg[0] == '/') {
-        printf( "%s\n", buffer2 );
+        char temp[PATH_MAX];
+        rmSlashes( temp, buffer2 );
+        printf( "%s\n", temp );
     } else {
         char prePath[PATH_MAX]; // Путь от корня до данной директории
         char* res = getcwd( prePath, PATH_MAX );
+        char temp[PATH_MAX];
         if (res != NULL) {
-            printf( "%s/%s\n", prePath, buffer2 );
+            sprintf( temp, "%s/%s\n", prePath, buffer2 );
+            char temp2[PATH_MAX];
+            rmSlashes( temp2, temp );
+            printf( "%s", temp2 );
         } else {
             err( 1, "Error number %d", errno);
         }
@@ -67,9 +89,15 @@ int main( int argc, char* argv[] ) {
         return 1;
     }
 
+    // Обработка "/////////"
+    char buffer[PATH_MAX];
+    rmSlashes( buffer, argv[1] );
+
+    printf( "%s\n", buffer );
+
     // Проверка, не является ли файл ссылкой
     struct stat sb;
-    if (lstat( argv[1], &sb ) == -1) {
+    if (lstat( buffer, &sb ) == -1) {
         // No such file or directory
         if (errno != 2) {
             perror( "stat err" );
@@ -80,11 +108,11 @@ int main( int argc, char* argv[] ) {
     if ((sb.st_mode & S_IFMT) == S_IFLNK) {
         char* linkName;
         linkName = malloc( PATH_MAX );
-        readlink( argv[1], linkName, PATH_MAX ); // linkName - куда указывает ссылка
+        readlink( buffer, linkName, PATH_MAX ); // linkName - куда указывает ссылка
         linkName[sb.st_size] = '\0'; // Символ конца строки
         printPath( linkName );
     } else {
-        printPath( argv[1] );
+        printPath( buffer );
     }
 
     return 0;
