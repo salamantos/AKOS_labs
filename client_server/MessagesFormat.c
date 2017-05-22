@@ -64,9 +64,40 @@ unsigned char* getTimeStamp() {
     return result;
 }
 
+void formMessageBody( unsigned char* messageBody, size_t* messageBodyLen, char* lines[], size_t linesCount ) {
+    int j = 0;
+    for (int i = 0; i < linesCount; ++i) {
+        unsigned char* lenInBytes = intToBytes( strlen( lines[i] ));
+        for (int k = 0; k < 4; ++k) {
+            messageBody[j++] = lenInBytes[k];
+        }
+        int strLen = strlen( lines[i] );
+        for (int k = 0; k < strLen; ++k) {
+            messageBody[j++] = lines[i][k];
+        }
+        free( lenInBytes );
+    }
+    *messageBodyLen = j;
+}
+
+void getLinesList( unsigned char* messageBody, size_t messageBodyLen, char* lines[], size_t* linesCount ) {
+    int j = 0;
+    int i = 4;
+    while (i < messageBodyLen) {
+        size_t len = bytesToInt( &messageBody[i - 4] );
+        for (int k = 0; k < len; ++k) {
+            lines[j][k] = messageBody[i++];
+        }
+        i+=4;
+        ++j;
+    }
+    *linesCount = j;
+}
+
 // Формирование сообщения
-size_t formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
-    unsigned char* lenInBytes = intToBytes( messageBodyLen+5 );
+size_t
+formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
+    unsigned char* lenInBytes = intToBytes( messageBodyLen + 5 );
     int i = 0;
     resultMessage[i++] = type;
     int k;
@@ -90,7 +121,7 @@ void recognizeMessage( char* message, size_t* len, char* type, char* messageBody
     for (j = 0; j < 4; ++j) {
         lenInBytes[j] = (unsigned char) message[i++];
     }
-    size_t messageBodyLen = bytesToInt( lenInBytes )-5;
+    size_t messageBodyLen = bytesToInt( lenInBytes ) - 5;
     for (j = 0; j < messageBodyLen; ++j) {
         messageBody[j] = (unsigned char) message[i++];
     }

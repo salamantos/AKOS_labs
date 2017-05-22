@@ -14,6 +14,10 @@ size_t bytesToInt( unsigned char* bytes );
 
 void bytesToDoubleInt( unsigned char* bytes, int* number1, int* number2 );
 
+void formMessageBody( unsigned char* messageBody, size_t* messageBodyLen, char* lines[], size_t linesCount );
+
+void getLinesList( unsigned char* messageBody, size_t messageBodyLen, char* lines[], size_t* linesCount );
+
 size_t
 formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen );
 

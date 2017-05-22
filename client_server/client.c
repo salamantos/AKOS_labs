@@ -10,7 +10,7 @@
 #include "Common.h"
 #include <signal.h>
 
-int portno=1337;
+int portno = 1337;
 
 void error( const char* msg ) {
     perror( msg );
@@ -23,7 +23,7 @@ int sockfd;
 void terminate( int param ) {
     //status = 1;
     close( sockfd );
-    printf( "Terminated\n");
+    printf( "Terminated\n" );
     exit( 0 );
 }
 
@@ -42,12 +42,23 @@ void* receiver( void* type ) {
         char messageBody[MESSAGE_LEN];
         recognizeMessage( buffer, &buff_size, &typeGet, messageBody );
 
+        char* lines[3];
+        lines[0] = (char*) malloc( 20 );
+        lines[1] = (char*) malloc( 32 );
+        lines[2] = (char*) malloc( MESSAGE_LEN );
+        size_t linesCount = 0;
         switch (typeGet) {
             case 'k':
                 printf( "Вы были удалены из чата, причина: %s\n", messageBody );
                 exit( 0 );
             case 'r':
-                printf( "   %s\n", messageBody );
+                for (int i = 0; i < buff_size; ++i) {
+                    printf( "%d ", messageBody[i] );
+                }
+                printf( "\n" );
+                getLinesList( messageBody, buff_size, lines, &linesCount );
+
+                printf( "   %s: %s\n", lines[1], lines[2] );
                 break;
             case 'l':
                 printf( "%s\n", messageBody );
@@ -76,7 +87,7 @@ int main( int argc, char* argv[] ) {
         error( "Не хватает параметров" );
     }
 
-    portno = atoi(argv[2]);
+    portno = atoi( argv[2] );
 
     // Обработка ctrl+c
     struct sigaction sigIntHandler;
@@ -184,7 +195,7 @@ int main( int argc, char* argv[] ) {
         char res[MESSAGE_LEN];
         size_t resSize = formMessage( res, type, buffer, bufferLen );
         n = write( sockfd, res, resSize );
-        printf("Send\n");
+        printf( "Send\n" );
         if (n < 0) error( "ERROR writing to socket" );
     }
     sleep( 1 );

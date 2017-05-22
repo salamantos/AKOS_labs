@@ -6,9 +6,7 @@
 #include <stdlib.h>
 #include "MessagesFormat.h"
 #include "UsersModule.h"
-#include "test/SharedMemory.h"
 #include <dirent.h>
-#include "test/MessagesReceiving.h"
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>

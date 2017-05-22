@@ -1,14 +1,14 @@
 #include "TCP_connection.h"
 #include "Common.h"
 #include "MessagesFormat.h"
-#include "test/MessagesReceiving.h"
 #include "UsersModule.h"
 
 // Отправляет историю сообщений пользователю
 void sendHistory( int count, int sockfd, int lastMessId, struct CMessage* messBuffer ) {
     char message[MESSAGE_LEN];
-    count = min(50, count);
+    count = min( 50, count );
     for (int i = max( lastMessId - count, 0 ); i < lastMessId; ++i) {
+        // В буфере уже сформированные сообщения для отправки
         size_t messSize = formMessage( message, 'h', messBuffer[i].mess, messBuffer[i].len );
         ssize_t n = write( sockfd, message, messSize );
         if (n < 0) error( "ERROR writing to socket" );
@@ -99,16 +99,20 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             // Обычное сообщение, добавляем к нему логин отправителя
             sendAnswer = 0;
             char* constMessBody = (char*) malloc( MESSAGE_LEN );
-            size_t loginLen = strlen( getLogin );
-            strcpy( constMessBody, getLogin );
-            strcpy( constMessBody + loginLen, ": " );
-            strcpy( constMessBody + loginLen + 2, messBody );
-            messBSize = strlen( constMessBody );
+            char* lines[3];
+            lines[0] = "1";
+            lines[1] = getLogin;
+            lines[2] = messBody;
+
+            char messageBody[MESSAGE_LEN];
+            size_t messBLen = 0;
+            formMessageBody( messageBody, &messBLen, lines, 3 );
+            size_t messSize = formMessage( constMessBody, 'r', messageBody, messBLen );
 
             // Сохраняем в буффер
             struct CMessage* newMess = (struct CMessage*) malloc( sizeof( struct CMessage ));
             newMess->mess = constMessBody;
-            newMess->len = messBSize;
+            newMess->len = messBLen + 5;
             sem_wait( semaphore );
             messBuffer[*(lastMessId)] = *newMess;
             *lastMessId = *lastMessId + 1;
@@ -123,8 +127,8 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
         case 'o':
             sprintf( exitMess, "%s left the chat", login );
             char message[MESSAGE_LEN];
-            size_t messSize = formMessage( message, 'm', exitMess, strlen( exitMess ));
-            sendToAll( message, messSize, *onlineCount, usersList );
+            size_t messSize1 = formMessage( message, 'm', exitMess, strlen( exitMess ));
+            sendToAll( message, messSize1, *onlineCount, usersList );
             break;
         case 'k':
             sendAnswer = 1;

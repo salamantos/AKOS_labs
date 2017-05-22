@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include "MessagesFormat.h"
 #include "UsersModule.h"
-#include "test/SharedMemory.h"
 #include <dirent.h>
-#include "test/MessagesReceiving.h"
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -53,9 +51,16 @@ void* openBroadcast( void* getParam ) {
         if (currentId == *lastMessId) {
             continue;
         }
-        char message[MESSAGE_LEN];
-        size_t messSize = formMessage( message, 'r', messBuffer[currentId].mess, messBuffer[currentId].len );
-        sendToAll( message, messSize, *onlineCount, usersList );
+//        char message[MESSAGE_LEN];
+//        char messageBody[MESSAGE_LEN];
+//        size_t messBLen=0;
+//        formMessageBody(messageBody, &messBLen, &messBuffer[currentId].mess, 1);
+//        size_t messSize = formMessage( message, 'r', messageBody, messBLen );
+//        for (int i = 0; i < messBuffer[currentId].len; ++i) {
+//            printf("%d ", messBuffer[currentId].mess[i]);
+//        }
+//        printf("\n");
+        sendToAll( messBuffer[currentId].mess, messBuffer[currentId].len, *onlineCount, usersList );
         ++currentId;
     }
 }
