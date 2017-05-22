@@ -2,6 +2,7 @@
 #include <string.h>
 #include <regex.h>
 #include <dirent.h>
+#include <stdlib.h>
 #include "Common.h"
 
 char* hash( char* str ) {
@@ -121,14 +122,14 @@ int createUser( struct CUser* usersList, char* login, char* password, int isKick
         return status;
     }
 
-    struct CUser userInfo;
-    userInfo.login = login;
-    userInfo.password = password;
-    userInfo.id = userIdRandom++;
-    userInfo.isOnline = 1;
-    userInfo.isKicked = isKicked;
-    userInfo.sockfd = sockfd;
-    addUserToList( usersList, &userInfo );
+    struct CUser* userInfo = (struct CUser*) malloc( sizeof( struct CUser ));
+    userInfo->login = login;
+    userInfo->password = password;
+    userInfo->id = userIdRandom++;
+    userInfo->isOnline = 1;
+    userInfo->isKicked = isKicked;
+    userInfo->sockfd = sockfd;
+    addUserToList( usersList, userInfo );
 
     return 0;
 }

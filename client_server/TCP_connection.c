@@ -34,7 +34,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             sendAnswer = 1; // Отвечать пользователю на его сообщение или нет
             type = 's';
             // Получаем логин и пароль
-            char login[32];
+            char* login = (char*) malloc( 32 * sizeof( char ));
             char* password = (char*) malloc( 32 * sizeof( char ));
             bzero( login, 32 );
             bzero( password, 32 );
@@ -125,6 +125,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             char message[MESSAGE_LEN];
             size_t messSize = formMessage( message, 'm', exitMess, strlen( exitMess ));
             sendToAll( message, messSize, *onlineCount, usersList );
+            break;
         case 'k':
             sendAnswer = 1;
             int kickRes = 0;
@@ -219,8 +220,8 @@ int connectNewUser( struct CThreadParam* param ) {
     rmUserFromList( usersList, login );
     *onlineCount = *onlineCount - 1;
 
-    free(login);
+    //free(login);
 
-    printf( "Stopped talking\n" );
+    printf( "Stopped talking!\n" );
     return 0;
 }
