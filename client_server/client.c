@@ -10,6 +10,7 @@
 #include "Common.h"
 #include <signal.h>
 
+int portno=1337;
 
 void error( const char* msg ) {
     perror( msg );
@@ -32,7 +33,7 @@ void* receiver( void* type ) {
     while (*(char*) type != 'o') {
         bzero( buffer, MESSAGE_LEN );
         ssize_t n = read( sockfd, buffer, 5 );
-        size_t bytesCount = bytesToInt( buffer + 1 );
+        size_t bytesCount = bytesToInt( buffer + 1 ) - 5;
         n = read( sockfd, buffer + 5, bytesCount );
         if (n < 0) error( "ERROR reading from socket" );
 
@@ -71,10 +72,11 @@ void* receiver( void* type ) {
 }
 
 int main( int argc, char* argv[] ) {
-    if (argc < 2) {
-        printf( "Run with server IP!\n" );
-        exit( 0 );
+    if (argc != 3) {
+        error( "Не хватает параметров" );
     }
+
+    portno = atoi(argv[2]);
 
     // Обработка ctrl+c
     struct sigaction sigIntHandler;
@@ -182,6 +184,7 @@ int main( int argc, char* argv[] ) {
         char res[MESSAGE_LEN];
         size_t resSize = formMessage( res, type, buffer, bufferLen );
         n = write( sockfd, res, resSize );
+        printf("Send\n");
         if (n < 0) error( "ERROR writing to socket" );
     }
     sleep( 1 );

@@ -66,7 +66,7 @@ unsigned char* getTimeStamp() {
 
 // Формирование сообщения
 size_t formMessage( unsigned char* resultMessage, unsigned char type, unsigned char* messageBody, size_t messageBodyLen ) {
-    unsigned char* lenInBytes = intToBytes( messageBodyLen );
+    unsigned char* lenInBytes = intToBytes( messageBodyLen+5 );
     int i = 0;
     resultMessage[i++] = type;
     int k;
@@ -90,7 +90,7 @@ void recognizeMessage( char* message, size_t* len, char* type, char* messageBody
     for (j = 0; j < 4; ++j) {
         lenInBytes[j] = (unsigned char) message[i++];
     }
-    size_t messageBodyLen = bytesToInt( lenInBytes );
+    size_t messageBodyLen = bytesToInt( lenInBytes )-5;
     for (j = 0; j < messageBodyLen; ++j) {
         messageBody[j] = (unsigned char) message[i++];
     }

@@ -200,7 +200,7 @@ int connectNewUser( struct CThreadParam* param ) {
         // Читаем сообщение
         bzero( buffer, MESSAGE_LEN );
         ssize_t n = read( newsockfd, buffer, 5 ); // 1 байт - тип. Следующие 4 - размер сообщения
-        size_t bytesCount = bytesToInt( buffer + 1 );
+        size_t bytesCount = bytesToInt( buffer + 1 ) - 5;
         n = read( newsockfd, buffer + 5, bytesCount );
         if (buffer[0] == 0) break; // Клиент отключился
         if (n < 0) error( "ERROR reading from socket" );

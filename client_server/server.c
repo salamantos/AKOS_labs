@@ -15,6 +15,8 @@
 #include "Common.h"
 
 int status = 0;
+int portno=1337;
+
 
 // Завершение работы с ошибкой
 void error( const char* msg ) {
@@ -58,7 +60,17 @@ void* openBroadcast( void* getParam ) {
     }
 }
 
-int main() {
+int main( int argc, char* argv[] ) {
+    if (argc != 3) {
+        error( "Не хватает параметров" );
+    }
+
+    if(strcmp(ROOT_PASSWORD, argv[2])!=0){
+        error( "Неверный пароль запуска" );
+    }
+
+    portno = atoi(argv[1]);
+
     // Инициализируем переменные
     userIdRandom = 1000;
     nullUser = (struct CUser*) malloc( sizeof( struct CUser ));

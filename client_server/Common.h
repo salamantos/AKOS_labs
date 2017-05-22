@@ -9,7 +9,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define portno 1333
+//#define portno 1333
 #define MESSAGE_LEN 66000
 #define ROOT_PASSWORD "pass"
 #define MAX_CONNECTED_USERS 100
