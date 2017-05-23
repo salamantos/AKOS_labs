@@ -13,8 +13,7 @@
 #include "Common.h"
 
 int status = 0;
-int portno=1337;
-
+int portno = 1337;
 
 // Завершение работы с ошибкой
 void error( const char* msg ) {
@@ -70,11 +69,12 @@ int main( int argc, char* argv[] ) {
         error( "Не хватает параметров" );
     }
 
-    if(strcmp(ROOT_PASSWORD, argv[2])!=0){
-        error( "Неверный пароль запуска" );
+    if (strcmp( "", argv[2] ) == 0) {
+        error( "Пустой пароль запуска" );
     }
+    strcpy( ROOT_PASSWORD, argv[2] );
 
-    portno = atoi(argv[1]);
+    portno = atoi( argv[1] );
 
     // Инициализируем переменные
     userIdRandom = 1000;

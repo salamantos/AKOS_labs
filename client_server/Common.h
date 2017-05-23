@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 #define MESSAGE_LEN 66000
-#define ROOT_PASSWORD "pass"
 #define MAX_CONNECTED_USERS 100
+char ROOT_PASSWORD[32];
 
 int userIdRandom;
 

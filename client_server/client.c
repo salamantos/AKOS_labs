@@ -169,10 +169,8 @@ int main( int argc, char* argv[] ) {
     if (n < 0) error( "ERROR reading from socket" );
 
     recognizeMessage( message, &messSize, &type, messBody );
-    //printf( "2t: %c, m: %s\n", type, messBody );
     if (type == 's') {
         int status = bytesToInt( messBody + 4 );
-        printf( "%d\n", status );
         switch (status) {
             case 0:
                 printf( "Успешная аутентификация!\n" );
