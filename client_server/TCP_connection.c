@@ -35,11 +35,13 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     lines[2] = (char*) malloc( MESSAGE_LEN );
     getLinesList( messBody, messBSize, lines, &temp );
     char messageBody[MESSAGE_LEN];
+    size_t messBLen = 0;
     switch (type) {
         case 'i':
             // Регистрация/авторизация
             sendAnswer = 1; // Отвечать пользователю на его сообщение или нет
             type = 's';
+            int status = 0;
             // Получаем логин и пароль
             char* login = lines[0];
             char* password = lines[1];
@@ -54,15 +56,12 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 int crStatus = createUser( usersList, login, password, 0, newsockfd );
                 sem_post( semaphore );
                 if (crStatus == 0) {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '0';
+                    status = 0;
                 } else if (crStatus == 4) {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '4'; // Ошибка регистрации
+                    status = 4; // Ошибка регистрации
                     kickFromChat = 1;
                 } else if (crStatus == 5) {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '5'; // Ошибка доступа
+                    status = 5; // Ошибка доступа
                     kickFromChat = 1;
                 }
             } else if (userStatus == 1) {
@@ -71,20 +70,17 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 int auStatus = authentication( usersList, login, password, newsockfd );
                 sem_post( semaphore );
                 if (auStatus == 0) {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '0';
+                    status = 0;
                 } else if (auStatus == 5) {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '5'; // kicked
+                    status = 5; // kicked
                     kickFromChat = 1;
                 } else {
-                    bzero( messBody, MESSAGE_LEN );
-                    messBody[0] = '3'; // Ошибка аутентификации
+                    status = 3; // Ошибка аутентификации
                     kickFromChat = 1;
                 }
             }
             strcpy( getLogin, login );
-            if (messBody[0] == '0') {
+            if (status == 0) {
                 sem_wait( semaphore );
                 (*onlineCount)++;
                 sem_post( semaphore );
@@ -93,6 +89,10 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
 //                size_t messSize2 = formMessage( message2, 'm', exitMess, strlen( exitMess ));
 //                sendToAll( message2, messSize2, *onlineCount, usersList );
             }
+            bzero( messBody, 9 );
+            messBody[3] = 4;
+            messBody[7] = status;
+            messBSize = 8;
             break;
         case 'r':
             // Обычное сообщение, добавляем к нему логин отправителя
@@ -103,9 +103,8 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             lines[0] = "1";
             lines[1] = getLogin;
 
-            size_t messBLen = 0;
             formMessageBody( messageBody, &messBLen, lines, 3 );
-            size_t messSize = formMessage( constMessBody, 'r', messageBody, messBLen );
+            messBSize = formMessage( constMessBody, 'r', messageBody, messBLen );
 
             // Сохраняем в буффер
             struct CMessage* newMess = (struct CMessage*) malloc( sizeof( struct CMessage ));
@@ -145,7 +144,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 if (isOnline == 1) {
                     lines[0] = lines[1];
                     formMessageBody( messageBody, &messBLen, lines, 1 );
-                    messSize = formMessage( message, 'k', messageBody, messBLen );
+                    size_t messSize = formMessage( message, 'k', messageBody, messBLen );
                     ssize_t n = write( kickedSock, message, messSize );
                     if (n < 0) {
                         error( "ERROR writing to socket" );

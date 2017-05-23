@@ -47,6 +47,7 @@ void* receiver( void* type ) {
         lines[1] = (char*) malloc( MESSAGE_LEN );
         lines[2] = (char*) malloc( MESSAGE_LEN );
         size_t linesCount = 0;
+        int status = 0;
         switch (typeGet) {
             case 'k':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -64,7 +65,8 @@ void* receiver( void* type ) {
                 printf( "%s\n", messageBody );
                 break;
             case 's':
-                printf( "Статусное сообщение №%s\n", messageBody );
+                status = bytesToInt( messageBody + 4 );
+                printf( "Статусное сообщение №%d\n", status );
                 break;
             case 'h':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -147,21 +149,23 @@ int main( int argc, char* argv[] ) {
     recognizeMessage( message, &messSize, &type, messBody );
     //printf( "2t: %c, m: %s\n", type, messBody );
     if (type == 's') {
-        switch (messBody[0]) {
-            case '0':
+        int status = bytesToInt( messBody + 4 );
+        printf( "%d\n", status );
+        switch (status) {
+            case 0:
                 printf( "Успешная аутентификация!\n" );
                 break;
-            case '3':
-                printf( "Ошибка аутентификации\n", type );
+            case 3:
+                printf( "Ошибка аутентификации\n" );
                 exit( 0 );
-            case '4':
-                printf( "Ошибка регистрации\n", type );
+            case 4:
+                printf( "Ошибка регистрации\n" );
                 exit( 0 );
-            case '5':
-                printf( "Ошибка доступа\n", type );
+            case 5:
+                printf( "Ошибка доступа\n" );
                 exit( 0 );
             default:
-                printf( "Server is crazy! ->%c<-\n", type );
+                printf( "Server is crazy! ->%d<-\n", status );
                 exit( 0 );
         }
     } else {
