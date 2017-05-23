@@ -43,8 +43,8 @@ void* receiver( void* type ) {
         recognizeMessage( buffer, &buff_size, &typeGet, messageBody );
 
         char* lines[3];
-        lines[0] = (char*) malloc( 20 );
-        lines[1] = (char*) malloc( 32 );
+        lines[0] = (char*) malloc( MESSAGE_LEN );
+        lines[1] = (char*) malloc( MESSAGE_LEN );
         lines[2] = (char*) malloc( MESSAGE_LEN );
         size_t linesCount = 0;
         switch (typeGet) {
@@ -126,19 +126,22 @@ int main( int argc, char* argv[] ) {
     fgets( password, 32, stdin );
     password[strlen( password ) - 1] = 0; // Удаляем символ \n из конца строки
 
-    sprintf( messBody, "%s\n%s", login, password );
+    char messageBody[MESSAGE_LEN];
+    char* lines[2];
+    lines[0] = login;
+    lines[1] = password;
+    size_t messBLen = 0;
+    formMessageBody( messageBody, &messBLen, lines, 2 );
 
     char* message = (char*) malloc( MESSAGE_LEN );
-    size_t messSize = formMessage( message, type, messBody, strlen( messBody ));
+    size_t messSize = formMessage( message, 'i', messageBody, messBLen );
     n = write( sockfd, message, messSize );
-    if (n < 0)
-        error( "ERROR writing to socket" );
+    if (n < 0) error( "ERROR writing to socket" );
 
     bzero( message, MESSAGE_LEN );
     n = read( sockfd, message, MESSAGE_LEN );
+    if (n < 0) error( "ERROR reading from socket" );
 
-    if (n < 0)
-        error( "ERROR reading from socket" );
     recognizeMessage( message, &messSize, &type, messBody );
     //printf( "2t: %c, m: %s\n", type, messBody );
     if (type == 's') {
@@ -189,7 +192,7 @@ int main( int argc, char* argv[] ) {
         }
 
         char message[MESSAGE_LEN];
-        size_t messSize=0;
+        size_t messSize = 0;
         if (type == 'r') {
             char messageBody[MESSAGE_LEN];
             char* lines[1];

@@ -28,6 +28,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     int sendAnswer = 0;
     char exitMess[100];
     int kickFromChat = 0;
+    char* lines[3];
     switch (type) {
         case 'i':
             // Регистрация/авторизация
@@ -36,19 +37,12 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             // Получаем логин и пароль
             char* login = (char*) malloc( 32 * sizeof( char ));
             char* password = (char*) malloc( 32 * sizeof( char ));
-            bzero( login, 32 );
-            bzero( password, 32 );
-            int j = 0;
-            int i = 0;
-            for (i = 0; i < messBSize; ++i) {
-                if (messBody[i] == '\n')
-                    break;
-                login[j++] = messBody[i];
-            }
-            j = 0;
-            for (int k = i + 1/*Пропускаем \n*/; k < messBSize; ++k) {
-                password[j++] = messBody[k];
-            }
+
+            lines[0] = login;
+            lines[1] =password;
+            size_t temp1 = 0;
+            getLinesList( messBody, messBSize, lines, &temp1 );
+
             sem_wait( semaphore );
             // Проверяем, зареган юзер или нет
             int userStatus = isUserExist( usersList, login );
@@ -104,7 +98,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             sendAnswer = 0;
             char* constMessBody = (char*) malloc( MESSAGE_LEN );
 
-            char* lines[3];
             lines[0] = (char*) malloc( MESSAGE_LEN );
             size_t temp = 0;
             getLinesList( messBody, messBSize, lines, &temp );
