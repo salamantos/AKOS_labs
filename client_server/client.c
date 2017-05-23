@@ -52,10 +52,6 @@ void* receiver( void* type ) {
                 printf( "Вы были удалены из чата, причина: %s\n", messageBody );
                 exit( 0 );
             case 'r':
-                for (int i = 0; i < buff_size; ++i) {
-                    printf( "%d ", messageBody[i] );
-                }
-                printf( "\n" );
                 getLinesList( messageBody, buff_size, lines, &linesCount );
 
                 printf( "   %s: %s\n", lines[1], lines[2] );
@@ -192,10 +188,19 @@ int main( int argc, char* argv[] ) {
             buffer[--bufferLen] = 0; // Удаляем символ \n из конца строки
         }
 
-        char res[MESSAGE_LEN];
-        size_t resSize = formMessage( res, type, buffer, bufferLen );
-        n = write( sockfd, res, resSize );
-        printf( "Send\n" );
+        char message[MESSAGE_LEN];
+        size_t messSize=0;
+        if (type == 'r') {
+            char messageBody[MESSAGE_LEN];
+            char* lines[1];
+            lines[0] = buffer;
+            size_t messBLen = 0;
+            formMessageBody( messageBody, &messBLen, lines, 1 );
+            messSize = formMessage( message, 'r', messageBody, messBLen );
+        } else {
+            messSize = formMessage( message, type, buffer, bufferLen );
+        }
+        n = write( sockfd, message, messSize );
         if (n < 0) error( "ERROR writing to socket" );
     }
     sleep( 1 );

@@ -93,16 +93,24 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 sem_wait( semaphore );
                 (*onlineCount)++;
                 sem_post( semaphore );
+//                sprintf( exitMess, "%s joined the chat", login );
+//                char message2[MESSAGE_LEN];
+//                size_t messSize2 = formMessage( message2, 'm', exitMess, strlen( exitMess ));
+//                sendToAll( message2, messSize2, *onlineCount, usersList );
             }
             break;
         case 'r':
             // Обычное сообщение, добавляем к нему логин отправителя
             sendAnswer = 0;
             char* constMessBody = (char*) malloc( MESSAGE_LEN );
+
             char* lines[3];
+            lines[0] = (char*) malloc( MESSAGE_LEN );
+            size_t temp = 0;
+            getLinesList( messBody, messBSize, lines, &temp );
+            lines[2] = lines[0];
             lines[0] = "1";
             lines[1] = getLogin;
-            lines[2] = messBody;
 
             char messageBody[MESSAGE_LEN];
             size_t messBLen = 0;
@@ -125,7 +133,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             sem_post( semaphore );
             break;
         case 'o':
-            sprintf( exitMess, "%s left the chat", login );
+            sprintf( exitMess, "%s left the chat", getLogin );
             char message[MESSAGE_LEN];
             size_t messSize1 = formMessage( message, 'm', exitMess, strlen( exitMess ));
             sendToAll( message, messSize1, *onlineCount, usersList );
