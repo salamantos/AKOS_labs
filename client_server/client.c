@@ -49,7 +49,8 @@ void* receiver( void* type ) {
         size_t linesCount = 0;
         switch (typeGet) {
             case 'k':
-                printf( "Вы были удалены из чата, причина: %s\n", messageBody );
+                getLinesList( messageBody, buff_size, lines, &linesCount );
+                printf( "Вы были удалены из чата, причина: %s\n", lines[0] );
                 exit( 0 );
             case 'r':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -151,13 +152,13 @@ int main( int argc, char* argv[] ) {
                 printf( "Успешная аутентификация!\n" );
                 break;
             case '3':
-                printf( "Ошибка аутентификации ->%c<-\n", type );
+                printf( "Ошибка аутентификации\n", type );
                 exit( 0 );
             case '4':
-                printf( "Ошибка регистрации ->%c<-\n", type );
+                printf( "Ошибка регистрации\n", type );
                 exit( 0 );
             case '5':
-                printf( "Ошибка доступа ->%c<-\n", type );
+                printf( "Ошибка доступа\n", type );
                 exit( 0 );
             default:
                 printf( "Server is crazy! ->%c<-\n", type );
@@ -201,8 +202,29 @@ int main( int argc, char* argv[] ) {
             size_t messBLen = 0;
             formMessageBody( messageBody, &messBLen, lines, 1 );
             messSize = formMessage( message, type, messageBody, messBLen );
-        } else if (type == 'h') {
+        } else if (type == 'k') {
+            char id[32];
+            char reason[MESSAGE_LEN];
 
+            char messageBody[MESSAGE_LEN];
+            char* lines[2];
+            lines[0] = id;
+            lines[1] = reason;
+
+            int i = 0;
+            while (buffer[i] != ' ' && i < strlen( buffer )) {
+                id[i] = buffer[i];
+                ++i;
+            }
+            int j = i++;
+            while (i < strlen( buffer )) {
+                reason[i - j - 1] = buffer[i];
+                ++i;
+            }
+
+            size_t messBLen = 0;
+            formMessageBody( messageBody, &messBLen, lines, 2 );
+            messSize = formMessage( message, type, messageBody, messBLen );
         } else {
             messSize = formMessage( message, type, buffer, bufferLen );
         }

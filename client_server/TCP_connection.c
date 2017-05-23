@@ -34,6 +34,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     lines[1] = (char*) malloc( MESSAGE_LEN );
     lines[2] = (char*) malloc( MESSAGE_LEN );
     getLinesList( messBody, messBSize, lines, &temp );
+    char messageBody[MESSAGE_LEN];
     switch (type) {
         case 'i':
             // Регистрация/авторизация
@@ -102,7 +103,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             lines[0] = "1";
             lines[1] = getLogin;
 
-            char messageBody[MESSAGE_LEN];
             size_t messBLen = 0;
             formMessageBody( messageBody, &messBLen, lines, 3 );
             size_t messSize = formMessage( constMessBody, 'r', messageBody, messBLen );
@@ -141,9 +141,11 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 int kickedSock;
                 int isOnline = 0;
                 // Кикаем и, если еще онлайн, отправляем сообщение
-                kickRes = kick( usersList, atoi( messBody ), &kickedSock, &isOnline );
+                kickRes = kick( usersList, atoi( lines[0] ), &kickedSock, &isOnline );
                 if (isOnline == 1) {
-                    size_t messSize = formMessage( message, 'k', "Sad...", messBSize );
+                    lines[0] = lines[1];
+                    formMessageBody( messageBody, &messBLen, lines, 1 );
+                    messSize = formMessage( message, 'k', messageBody, messBLen );
                     ssize_t n = write( kickedSock, message, messSize );
                     if (n < 0) {
                         error( "ERROR writing to socket" );
