@@ -66,7 +66,29 @@ void* receiver( void* type ) {
                 break;
             case 's':
                 status = bytesToInt( messageBody + 4 );
-                printf( "Статусное сообщение №%d\n", status );
+                switch (status) {
+                    case 0:
+                        printf( "Успешно!\n" );
+                        break;
+                    case 1:
+                        printf( "Сообщение неизвестного типа\n" );
+                        break;
+                    case 3:
+                        printf( "Ошибка аутентификации\n" );
+                        break;
+                    case 4:
+                        printf( "Ошибка регистрации\n" );
+                        break;;
+                    case 5:
+                        printf( "Ошибка доступа\n" );
+                        break;
+                    case 6:
+                        printf( "Битое сообщение\n" );
+                        break;
+                    default:
+                        printf( "Server is crazy! ->%d<-\n", status );
+                        break;
+                }
                 break;
             case 'h':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -229,8 +251,10 @@ int main( int argc, char* argv[] ) {
             size_t messBLen = 0;
             formMessageBody( messageBody, &messBLen, lines, 2 );
             messSize = formMessage( message, type, messageBody, messBLen );
-        } else {
+        } else if (type == 'o' || type == 'l') {
             messSize = formMessage( message, type, buffer, bufferLen );
+        } else {
+            printf( "Неизвестная команда!\n" );
         }
         n = write( sockfd, message, messSize );
         if (n < 0) error( "ERROR writing to socket" );

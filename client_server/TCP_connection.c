@@ -152,13 +152,14 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 }
             }
             // Сообщаем root-у о результате
-            type = 'm';
+            bzero( messBody, 9 );
+            messBody[3] = 4;
+            messBSize = 8;
+            type = 's';
             if (kickRes == 0) {
-                bzero( messBody, MESSAGE_LEN );
-                strcpy( messBody, "Successfully kicked" );
+                messBody[7] = 0;
             } else {
-                bzero( messBody, MESSAGE_LEN );
-                strcpy( messBody, "Can't kick" );
+                messBody[7] = 6;
             }
             break;
         case 'h':
@@ -166,7 +167,10 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             break;
         default:
             sendAnswer = 1;
-            printf( "Client is crazy! ->%d<-\n", type );
+            bzero( messBody, 9 );
+            messBody[7] = 1;
+            messBSize = 8;
+            type = 's';
             break;
     }
 
