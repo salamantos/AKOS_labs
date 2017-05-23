@@ -5,12 +5,12 @@
 
 // Отправляет историю сообщений пользователю
 void sendHistory( int count, int sockfd, int lastMessId, struct CMessage* messBuffer ) {
-    char message[MESSAGE_LEN];
     count = min( 50, count );
     for (int i = max( lastMessId - count, 0 ); i < lastMessId; ++i) {
         // В буфере уже сформированные сообщения для отправки
-        size_t messSize = formMessage( message, 'h', messBuffer[i].mess, messBuffer[i].len );
-        ssize_t n = write( sockfd, message, messSize );
+        messBuffer[i].mess[0] = 'h';
+        ssize_t n = write( sockfd, messBuffer[i].mess, messBuffer[i].len );
+        messBuffer[i].mess[0] = 'r';
         if (n < 0) error( "ERROR writing to socket" );
     }
 }
@@ -28,20 +28,20 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     int sendAnswer = 0;
     char exitMess[100];
     int kickFromChat = 0;
+    size_t temp = 0;
     char* lines[3];
+    lines[0] = (char*) malloc( MESSAGE_LEN );
+    lines[1] = (char*) malloc( MESSAGE_LEN );
+    lines[2] = (char*) malloc( MESSAGE_LEN );
+    getLinesList( messBody, messBSize, lines, &temp );
     switch (type) {
         case 'i':
             // Регистрация/авторизация
             sendAnswer = 1; // Отвечать пользователю на его сообщение или нет
             type = 's';
             // Получаем логин и пароль
-            char* login = (char*) malloc( 32 * sizeof( char ));
-            char* password = (char*) malloc( 32 * sizeof( char ));
-
-            lines[0] = login;
-            lines[1] =password;
-            size_t temp1 = 0;
-            getLinesList( messBody, messBSize, lines, &temp1 );
+            char* login = lines[0];
+            char* password = lines[1];
 
             sem_wait( semaphore );
             // Проверяем, зареган юзер или нет
@@ -98,9 +98,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             sendAnswer = 0;
             char* constMessBody = (char*) malloc( MESSAGE_LEN );
 
-            lines[0] = (char*) malloc( MESSAGE_LEN );
-            size_t temp = 0;
-            getLinesList( messBody, messBSize, lines, &temp );
             lines[2] = lines[0];
             lines[0] = "1";
             lines[1] = getLogin;
@@ -164,7 +161,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             }
             break;
         case 'h':
-            sendHistory( atoi( messBody ), newsockfd, *lastMessId, messBuffer );
+            sendHistory( atoi( lines[0] ), newsockfd, *lastMessId, messBuffer );
             break;
         default:
             sendAnswer = 1;

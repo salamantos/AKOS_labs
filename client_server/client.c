@@ -66,7 +66,8 @@ void* receiver( void* type ) {
                 printf( "Статусное сообщение №%s\n", messageBody );
                 break;
             case 'h':
-                printf( "   History | %s\n", messageBody );
+                getLinesList( messageBody, buff_size, lines, &linesCount );
+                printf( "   History | %s: %s\n", lines[1], lines[2] );
                 break;
             case 0:
                 terminate( 146 );
@@ -193,13 +194,15 @@ int main( int argc, char* argv[] ) {
 
         char message[MESSAGE_LEN];
         size_t messSize = 0;
-        if (type == 'r') {
+        if (type == 'r' || type == 'h') {
             char messageBody[MESSAGE_LEN];
             char* lines[1];
             lines[0] = buffer;
             size_t messBLen = 0;
             formMessageBody( messageBody, &messBLen, lines, 1 );
-            messSize = formMessage( message, 'r', messageBody, messBLen );
+            messSize = formMessage( message, type, messageBody, messBLen );
+        } else if (type == 'h') {
+
         } else {
             messSize = formMessage( message, type, buffer, bufferLen );
         }
