@@ -12,7 +12,7 @@ unsigned char* intToBytes( unsigned long number );
 
 size_t bytesToInt( unsigned char* bytes );
 
-void bytesToDoubleInt( unsigned char* bytes, int* number1, int* number2 );
+char* timeStampToStr( char* bytes );
 
 void formMessageBody( unsigned char* messageBody, size_t* messageBodyLen, char* lines[], size_t linesCount );
 
@@ -25,4 +25,4 @@ void recognizeMessage( char* message, size_t* len, char* type, char* messageBody
 
 unsigned char* getTimeStamp();
 
-void prepareUsersList( char* messageBody, size_t* messBSize, int* onlineCount, struct CUser* usersList);
+void prepareUsersList( char* messageBody, size_t* messBSize, int* onlineCount, struct CUser* usersList );

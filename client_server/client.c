@@ -54,7 +54,7 @@ void* receiver( void* type ) {
             case 'r':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
 
-                printf( "   %s: %s\n", lines[1], lines[2] );
+                printf( "   %s %s: %s\n", timeStampToStr(lines[0]), lines[1], lines[2] );
                 break;
             case 'l':
                 printf( "%s\n", messageBody );
@@ -92,7 +92,7 @@ void* receiver( void* type ) {
                 break;
             case 'h':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
-                printf( "   History | %s: %s\n", lines[1], lines[2] );
+                printf( "   History | %s %s: %s\n", timeStampToStr(lines[0]), lines[1], lines[2] );
                 break;
             case 0:
                 terminate( 146 );

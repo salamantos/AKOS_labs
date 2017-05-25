@@ -94,7 +94,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             char* constMessBody = (char*) malloc( MESSAGE_LEN );
 
             lines[2] = lines[0];
-            lines[0] = "1";
+            lines[0] = getTimeStamp();
             lines[1] = getLogin;
 
             formMessageBody( messageBody, &messBLen, lines, 3 );

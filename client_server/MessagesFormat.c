@@ -27,24 +27,37 @@ size_t bytesToInt( unsigned char* bytes ) {
     return number;
 }
 
-void bytesToDoubleInt( unsigned char* bytes, int* number1, int* number2 ) {
-    *number1 = 0;
-    *number1 = bytes[0] << 24;
-    *number1 += (bytes[1] << 16);
-    *number1 += (bytes[2] << 8);
-    *number1 += (bytes[3]);
+char* timeStampToStr( char* bytes ) {
+    int number1 = 0;
+    number1 = bytes[0] << 24;
+    number1 += (bytes[1] << 16);
+    number1 += (bytes[2] << 8);
+    number1 += (bytes[3]);
 
-    *number2 = 0;
-    *number2 = bytes[4] << 24;
-    *number2 += (bytes[5] << 16);
-    *number2 += (bytes[6] << 8);
-    *number2 += (bytes[7]);
+    int number2 = 0;
+    number2 = bytes[4] << 24;
+    number2 += (bytes[5] << 16);
+    number2 += (bytes[6] << 8);
+    number2 += (bytes[7]);
+
+    struct timeval tv;
+    tv.tv_sec = number1;
+    tv.tv_usec = number2;
+    time_t nowtime;
+    struct tm* nowtm;
+    char tmbuf[64];
+    char* buff = (char*) malloc( 64 );
+
+    nowtime = tv.tv_sec;
+    nowtm = localtime( &nowtime );
+    strftime( tmbuf, sizeof tmbuf, "%H:%M:%S", nowtm );
+    snprintf( buff, sizeof buff, "%s.%06ld", tmbuf, tv.tv_usec );
+    return buff;
 }
 
 unsigned char* getTimeStamp() {
     struct timeval tv;
     gettimeofday( &tv, NULL);
-    printf( "%d, %d\n", (int) tv.tv_sec, (int) (unsigned long) tv.tv_usec );
 
     unsigned char* result = (unsigned char*) malloc( 9 );
     int i = 0;
@@ -57,13 +70,26 @@ unsigned char* getTimeStamp() {
     for (k = 0; k < 4; ++k) {
         result[i++] = timeInMicroSec[k];
     }
+    result[8] = 0;
 
     return result;
 }
 
 void formMessageBody( unsigned char* messageBody, size_t* messageBodyLen, char* lines[], size_t linesCount ) {
     int j = 0;
-    for (int i = 0; i < linesCount; ++i) {
+    int i = 0;
+    // Для timestamp
+    if (linesCount > 0 && lines[0][0] == 0) {
+        unsigned char* lenInBytes = intToBytes( 8 );
+        for (int k = 0; k < 4; ++k) {
+            messageBody[j++] = lenInBytes[k];
+        }
+        for (int k = 0; k < 8; ++k) {
+            messageBody[j++] = lines[0][k];
+        }
+        i = 1;
+    }
+    for (; i < linesCount; ++i) {
         unsigned char* lenInBytes = intToBytes( strlen( lines[i] ));
         for (int k = 0; k < 4; ++k) {
             messageBody[j++] = lenInBytes[k];
@@ -85,7 +111,7 @@ void getLinesList( unsigned char* messageBody, size_t messageBodyLen, char* line
         for (int k = 0; k < len; ++k) {
             lines[j][k] = messageBody[i++];
         }
-        i+=4;
+        i += 4;
         ++j;
     }
     *linesCount = j;
