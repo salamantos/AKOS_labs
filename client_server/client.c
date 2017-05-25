@@ -49,7 +49,7 @@ void* receiver( void* type ) {
         switch (typeGet) {
             case 'k':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
-                printf( "Вы были удалены из чата, причина: %s\n", lines[0] );
+                printf( "\x1B[31mВы были удалены из чата, причина: %s\x1B[0m\n", lines[0] ); // red
                 exit( 0 );
             case 'r':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -60,33 +60,35 @@ void* receiver( void* type ) {
                 printf( "%s\n", messageBody );
                 break;
             case 'm':
-                printf( "%s\n", messageBody );
+                printf( "\x1B[32m   %s\x1B[0m\n", messageBody ); // green
                 break;
             case 's':
                 status = bytesToInt( messageBody + 4 );
+                printf("\x1B[33m");
                 switch (status) {
                     case 0:
-                        printf( "Успешно!\n" );
+                        printf( "Успешно!" );
                         break;
                     case 1:
-                        printf( "Сообщение неизвестного типа\n" );
+                        printf( "Сообщение неизвестного типа" );
                         break;
                     case 3:
-                        printf( "Ошибка аутентификации\n" );
+                        printf( "Ошибка аутентификации" );
                         break;
                     case 4:
-                        printf( "Ошибка регистрации\n" );
-                        break;;
+                        printf( "Ошибка регистрации" );
+                        break;
                     case 5:
-                        printf( "Ошибка доступа\n" );
+                        printf( "Ошибка доступа" );
                         break;
                     case 6:
-                        printf( "Битое сообщение\n" );
+                        printf( "Битое сообщение" );
                         break;
                     default:
-                        printf( "Server is crazy! ->%d<-\n", status );
+                        printf( "Server is crazy! ->%d<-", status );
                         break;
                 }
+                printf("\x1B[0m\n");
                 break;
             case 'h':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
@@ -169,32 +171,32 @@ int main( int argc, char* argv[] ) {
         int status = bytesToInt( messBody + 4 );
         switch (status) {
             case 0:
-                printf( "Успешная аутентификация!\n" );
+                printf( "\x1B[33mУспешная аутентификация!\x1B[0m\n" );
                 break;
             case 3:
-                printf( "Ошибка аутентификации\n" );
+                printf( "\x1B[31mОшибка аутентификации\x1B[0m\n" );
                 exit( 0 );
             case 4:
-                printf( "Ошибка регистрации\n" );
+                printf( "\x1B[31mОшибка регистрации\x1B[0m\n" );
                 exit( 0 );
             case 5:
-                printf( "Ошибка доступа\n" );
+                printf( "\x1B[31mОшибка доступа\x1B[0m\n" );
                 exit( 0 );
             default:
-                printf( "Server is crazy! ->%d<-\n", status );
+                printf( "\x1B[31mServer is crazy! ->%d<-\x1B[0m\n", status );
                 exit( 0 );
         }
     } else {
-        printf( "Server is crazy! ->%c<-\n", type );
+        printf( "\x1B[31mServer is crazy! ->%c<-\x1B[0m\n", type );
         exit( 0 );
     }
 
-    printf( "Вы подключились, список команд:\n" );
-    printf( "/r message - Отправить сообщение в чат\n" );
-    printf( "/o - выйти из чата\n" );
-    printf( "/h count - показать историю\n" );
-    printf( "/l - показать список кто онлайн\n" );
-    printf( "Например: '/r Привет!' - отправить сообщение 'Привет!'\n\n" );
+    printf( "\nВы подключились, список команд:\n" );
+    printf( "\x1B[36m/r message\x1B[0m - Отправить сообщение в чат\n" );
+    printf( "\x1B[36m/o\x1B[0m - выйти из чата\n" );
+    printf( "\x1B[36m/h count\x1B[0m - показать историю\n" );
+    printf( "\x1B[36m/l\x1B[0m - показать список кто онлайн\n" );
+    printf( "Например: '\x1B[36m/r Привет!\x1B[0m' - отправить сообщение 'Привет!'\n\n" );
 
     pthread_t thread;
     pthread_create( &thread, NULL, receiver, (void*) &type );

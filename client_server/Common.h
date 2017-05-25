@@ -9,8 +9,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define MESSAGE_LEN 66000
-#define MAX_CONNECTED_USERS 100
+#define MESSAGE_LEN 65600
+#define MAX_CONNECTED_USERS 42
 char ROOT_PASSWORD[32];
 
 int userIdRandom;

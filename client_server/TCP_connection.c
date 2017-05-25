@@ -33,6 +33,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     getLinesList( messBody, messBSize, lines, &temp );
     char messageBody[MESSAGE_LEN];
     size_t messBLen = 0;
+    int isNewUser = 0;
     switch (type) {
         case 'i':
             sendAnswer = 1; // Отвечать пользователю на его сообщение или нет
@@ -76,6 +77,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 sem_wait( semaphore );
                 (*onlineCount)++;
                 sem_post( semaphore );
+                isNewUser = 1;
 //                sprintf( exitMess, "%s joined the chat", login );
 //                char message2[MESSAGE_LEN];
 //                size_t messSize2 = formMessage( message2, 'm', exitMess, strlen( exitMess ));
@@ -113,7 +115,7 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             sem_post( semaphore );
             break;
         case 'o':
-            sprintf( exitMess, "%s left the chat", getLogin );
+            sprintf( exitMess, "%s вышел из чата", getLogin );
             char message[MESSAGE_LEN];
             size_t messSize1 = formMessage( message, 'm', exitMess, strlen( exitMess ));
             sendToAll( message, messSize1, *onlineCount, usersList );
@@ -168,6 +170,12 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
         if (n < 0) {
             error( "ERROR writing to socket" );
         }
+    }
+    if (isNewUser == 1) {
+        sprintf( exitMess, "%s присоединился к чату", getLogin );
+        char message2[MESSAGE_LEN];
+        size_t messSize2 = formMessage( message2, 'm', exitMess, strlen( exitMess ));
+        sendToAll( message2, messSize2, *onlineCount, usersList );
     }
     return kickFromChat;
 }
