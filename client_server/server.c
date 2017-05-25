@@ -109,7 +109,7 @@ int main( int argc, char* argv[] ) {
     if (sockfd < 0) error( "ERROR opening socket" );
     bzero((char*) &serv_addr, sizeof( serv_addr ));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_addr.s_addr = INADDR_ANY; //inet_addr("150.50.50.50");
     serv_addr.sin_port = htons( portno );
     // Assigning a name to a socket - для сокета получаем файл-дескриптор, теперь можем работать с ним как с файлом
     if (bind( sockfd, (struct sockaddr*) &serv_addr, sizeof( serv_addr )) < 0)

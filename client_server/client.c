@@ -193,12 +193,12 @@ int main( int argc, char* argv[] ) {
         exit( 0 );
     }
 
-    printf( "Welcome to чат! Список команд:\n" );
-    printf( "r message - Просто сообщение\n" );
-    printf( "o - logout\n" );
-    printf( "h count - history\n" );
-    printf( "l - list\n" );
-    printf( "Например: 'r Привет!' - отправить сообщение 'Привет!'\n\n" );
+    printf( "Вы подключились, список команд:\n" );
+    printf( "/r message - Отправить сообщение в чат\n" );
+    printf( "/o - выйти из чата\n" );
+    printf( "/h count - показать историю\n" );
+    printf( "/l - показать список кто онлайн\n" );
+    printf( "Например: '/r Привет!' - отправить сообщение 'Привет!'\n\n" );
 
     pthread_t thread;
     pthread_create( &thread, NULL, receiver, (void*) &type );
@@ -206,11 +206,11 @@ int main( int argc, char* argv[] ) {
     while (type != 'o') {
         char buffer[MESSAGE_LEN];
         bzero( buffer, MESSAGE_LEN );
-        fgets( buffer, 3, stdin ); // Для типа сообщения
-        type = buffer[0];
+        fgets( buffer, 4, stdin ); // Для типа сообщения
+        type = buffer[1];
         size_t bufferLen = 0;
         if (type == 'o' || type == 'l') {
-            bzero( buffer, MESSAGE_LEN );
+            bzero( buffer, 5 );
         } else {
             fgets( buffer, MESSAGE_LEN, stdin );
             bufferLen = strlen( buffer );
