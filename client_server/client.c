@@ -54,7 +54,7 @@ void* receiver( void* type ) {
             case 'r':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
 
-                printf( "   %s %s: %s\n", timeStampToStr(lines[0]), lines[1], lines[2] );
+                printf( "   %s \x1B[37m%s\x1B[0m: %s\n", timeStampToStr( lines[0] ), lines[1], lines[2] );
                 break;
             case 'l':
                 printf( "%s\n", messageBody );
@@ -64,7 +64,7 @@ void* receiver( void* type ) {
                 break;
             case 's':
                 status = bytesToInt( messageBody + 4 );
-                printf("\x1B[33m");
+                printf( "\x1B[33m" );
                 switch (status) {
                     case 0:
                         printf( "Успешно!" );
@@ -88,11 +88,11 @@ void* receiver( void* type ) {
                         printf( "Server is crazy! ->%d<-", status );
                         break;
                 }
-                printf("\x1B[0m\n");
+                printf( "\x1B[0m\n" );
                 break;
             case 'h':
                 getLinesList( messageBody, buff_size, lines, &linesCount );
-                printf( "   History | %s %s: %s\n", timeStampToStr(lines[0]), lines[1], lines[2] );
+                printf( "   History | %s \x1B[37m%s\x1B[0m: %s\n", timeStampToStr( lines[0] ), lines[1], lines[2] );
                 break;
             case 0:
                 terminate( 146 );
@@ -205,14 +205,21 @@ int main( int argc, char* argv[] ) {
         char buffer[MESSAGE_LEN];
         bzero( buffer, MESSAGE_LEN );
         fgets( buffer, 4, stdin ); // Для типа сообщения
-        type = buffer[1];
         size_t bufferLen = 0;
-        if (type == 'o' || type == 'l') {
-            bzero( buffer, 5 );
+        if (buffer[0] == '/') {
+            type = buffer[1];
+            if (type == 'o' || type == 'l') {
+                bzero( buffer, 5 );
+            } else {
+                fgets( buffer, MESSAGE_LEN, stdin );
+                bufferLen = strlen( buffer );
+                buffer[--bufferLen] = 0; // Удаляем символ \n из конца строки
+            }
         } else {
-            fgets( buffer, MESSAGE_LEN, stdin );
+            fgets( buffer + 3, MESSAGE_LEN, stdin );
             bufferLen = strlen( buffer );
             buffer[--bufferLen] = 0; // Удаляем символ \n из конца строки
+            type = 'r';
         }
 
         char message[MESSAGE_LEN];
