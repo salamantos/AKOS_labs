@@ -19,7 +19,6 @@ void error( const char* msg ) {
 
 int sockfd;
 
-// Штатное завершение работы
 void terminate( int param ) {
     //status = 1;
     close( sockfd );
@@ -27,7 +26,6 @@ void terminate( int param ) {
     exit( 0 );
 }
 
-// Функция в отдельном потоке, только принимающая сообщения и выводящая их на экран
 void* receiver( void* type ) {
     char buffer[MESSAGE_LEN];
     while (*(char*) type != 'o') {
@@ -111,7 +109,6 @@ int main( int argc, char* argv[] ) {
 
     portno = atoi( argv[2] );
 
-    // Обработка ctrl+c
     struct sigaction sigIntHandler;
     sigIntHandler.sa_handler = terminate;
     sigemptyset( &sigIntHandler.sa_mask );
@@ -137,7 +134,6 @@ int main( int argc, char* argv[] ) {
 
     ssize_t n;
 
-    // Логинимся
     char type = 'i'; // login
     char messBody[100];
     char login[32];

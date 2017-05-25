@@ -3,11 +3,9 @@
 #include "MessagesFormat.h"
 #include "UsersModule.h"
 
-// Отправляет историю сообщений пользователю
 void sendHistory( int count, int sockfd, int lastMessId, struct CMessage* messBuffer ) {
     count = min( 50, count );
     for (int i = max( lastMessId - count, 0 ); i < lastMessId; ++i) {
-        // В буфере уже сформированные сообщения для отправки
         messBuffer[i].mess[0] = 'h';
         ssize_t n = write( sockfd, messBuffer[i].mess, messBuffer[i].len );
         messBuffer[i].mess[0] = 'r';
@@ -16,7 +14,6 @@ void sendHistory( int count, int sockfd, int lastMessId, struct CMessage* messBu
 }
 
 int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin, struct CThreadParam* param ) {
-    // Получаем параметры
     int newsockfd = param->newsockfd;
     struct CMessage* messBuffer = param->messBuffer;
     int* lastMessId = param->lastMessId;
@@ -38,21 +35,17 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
     size_t messBLen = 0;
     switch (type) {
         case 'i':
-            // Регистрация/авторизация
             sendAnswer = 1; // Отвечать пользователю на его сообщение или нет
             type = 's';
             int status = 0;
-            // Получаем логин и пароль
             char* login = lines[0];
             char* password = lines[1];
 
             sem_wait( semaphore );
-            // Проверяем, зареган юзер или нет
             int userStatus = isUserExist( usersList, login );
             sem_post( semaphore );
             if (userStatus == 0) {
                 sem_wait( semaphore );
-                // Пытаемся зарегистрировать
                 int crStatus = createUser( usersList, login, password, 0, newsockfd );
                 sem_post( semaphore );
                 if (crStatus == 0) {
@@ -66,7 +59,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                 }
             } else if (userStatus == 1) {
                 sem_wait( semaphore );
-                // Пытаемся войти
                 int auStatus = authentication( usersList, login, password, newsockfd );
                 sem_post( semaphore );
                 if (auStatus == 0) {
@@ -106,7 +98,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             formMessageBody( messageBody, &messBLen, lines, 3 );
             messBSize = formMessage( constMessBody, 'r', messageBody, messBLen );
 
-            // Сохраняем в буффер
             struct CMessage* newMess = (struct CMessage*) malloc( sizeof( struct CMessage ));
             newMess->mess = constMessBody;
             newMess->len = messBLen + 5;
@@ -130,7 +121,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
         case 'k':
             sendAnswer = 1;
             int kickRes = 0;
-            // Проверяем права доступа
             if (strcmp( getLogin, "root" ) != 0) {
                 type = 's';
                 bzero( messBody, MESSAGE_LEN );
@@ -139,7 +129,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
             } else {
                 int kickedSock;
                 int isOnline = 0;
-                // Кикаем и, если еще онлайн, отправляем сообщение
                 kickRes = kick( usersList, atoi( lines[0] ), &kickedSock, &isOnline );
                 if (isOnline == 1) {
                     lines[0] = lines[1];
@@ -151,7 +140,6 @@ int switchMessType( char type, char* messBody, size_t messBSize, char* getLogin,
                     }
                 }
             }
-            // Сообщаем root-у о результате
             bzero( messBody, 9 );
             messBody[3] = 4;
             messBSize = 8;
@@ -188,7 +176,6 @@ int connectNewUser( struct CThreadParam* param ) {
     char buffer[MESSAGE_LEN];
     ssize_t n;
 
-    // Получаем параметры
     int newsockfd = param->newsockfd;
     struct CMessage* messBuffer = param->messBuffer;
     int* lastMessId = param->lastMessId;
@@ -196,7 +183,6 @@ int connectNewUser( struct CThreadParam* param ) {
     struct CUser* usersList = param->usersList;
     sem_t* semaphore = param->semaphore;
 
-    // Чтобы для каждого потока значения были разные, а не ссылались на одну структуру
     struct CThreadParam localParam;
     localParam = *param;
 
@@ -204,7 +190,6 @@ int connectNewUser( struct CThreadParam* param ) {
     char type = '0';
     char* login = (char*) malloc( 50 );
     while (type != 'o') {
-        // Читаем сообщение
         bzero( buffer, MESSAGE_LEN );
         ssize_t n = read( newsockfd, buffer, 5 ); // 1 байт - тип. Следующие 4 - размер сообщения
         size_t bytesCount = bytesToInt( buffer + 1 ) - 5;
@@ -212,12 +197,10 @@ int connectNewUser( struct CThreadParam* param ) {
         if (buffer[0] == 0) break; // Клиент отключился
         if (n < 0) error( "ERROR reading from socket" );
 
-        // Формируем сообщение для отправки
         size_t messBSize = 0;
         char messBody[MESSAGE_LEN];
         recognizeMessage( buffer, &messBSize, &type, messBody );
 
-        // Решаем что делать в зависимости от типа сообщения
         int kickFromChat = switchMessType( type, messBody, messBSize, login, &localParam );
         if (kickFromChat == 1) {
             return 0;
@@ -226,8 +209,6 @@ int connectNewUser( struct CThreadParam* param ) {
     close( newsockfd );
     rmUserFromList( usersList, login );
     *onlineCount = *onlineCount - 1;
-
-    //free(login);
 
     printf( "Stopped talking!\n" );
     return 0;
