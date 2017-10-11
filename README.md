@@ -1,8 +1,8 @@
-# AKOS_labs
-Лабораторные работы по АКОСу. ФИВТ 2017
+# Laboratory work on the subject of computer architecture and operating systems. MIPT 2017
 
-Репозиторий содержит 4 работы. 3 из них - частичная реализация некоторых утилит: realpath, ps, w
+> **The repository contains 4 works:**
 
-4 работа - многопоточный сервер клиент-сервер.
+> - 3 of them - partial implementation of some utilities: **realpath, ps, w**
+> - 4th - **multithreaded server and client application for text chat**
 
-Задания и некоторые материалы лежат здесь: https://yadi.sk/d/uILDdlE63K2BAh
+See more in labs.pdf
