@@ -5,4 +5,4 @@
 > - 3 of them - partial implementation of some utilities: **realpath, ps, w**
 > - 4th - **multithreaded server and client application for text chat**
 
-See more in labs.pdf
+See more in [labs.pdf](https://github.com/salamantos/AKOS_labs/blob/master/labs.pdf "labs.pdf")
